@@ -1,0 +1,1 @@
+require "lexxy_assistant"

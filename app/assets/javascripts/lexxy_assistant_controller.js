@@ -24,9 +24,7 @@ export default class extends Controller {
     this._submitHandler = () => {
       if (!this._bodyInserted || !this._parsed?._body) return
       const lexxy = document.querySelector("lexxy-editor")
-      if (lexxy?.editor) {
-        lexxy.editor.update(() => {}, { skipTransforms: true, discrete: true })
-      }
+      if (lexxy) lexxy.value = this._parsed._body
     }
     this.element.closest("form")?.addEventListener("submit", this._submitHandler)
   }
@@ -190,8 +188,8 @@ export default class extends Controller {
     while ((m = tableRe.exec(text)) !== null) {
       fields[m[1].trim().toLowerCase().replace(/\s+/g, "_")] = m[2].trim()
     }
-    const bodyIdx = text.indexOf("<p")
-    fields._body = bodyIdx !== -1 ? text.slice(bodyIdx).trim() : ""
+    const bodyMatch = text.match(/<(p|h[1-6]|blockquote|ul|ol)[\s>]/)
+    fields._body = bodyMatch ? text.slice(text.indexOf(bodyMatch[0])).trim() : ""
     return fields
   }
 
@@ -233,11 +231,6 @@ export default class extends Controller {
     if (!lexxy) { this._setStatus("Editor not found", true); return }
 
     lexxy.value = this._parsed._body
-
-    if (lexxy.editor) {
-      lexxy.editor.update(() => {}, { skipTransforms: true, discrete: true })
-    }
-
     this._bodyInserted = true
     this._setStatus("Inserted into editor")
   }
