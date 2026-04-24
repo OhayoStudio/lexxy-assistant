@@ -8,8 +8,9 @@ module LexxyAssistant
         app.config.importmap.cache_sweepers << root.join("app/assets/javascripts")
       end
     end
-
-    # Apply configured before_actions to the engine's ApplicationController
-    # after all initializers have run so the host app's methods are available.
   end
+end
+
+LexxyAssistant::Engine.routes.draw do
+  post "stream", to: "assistant#stream", as: :stream
 end
