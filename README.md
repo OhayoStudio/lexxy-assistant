@@ -147,6 +147,49 @@ end
 LexxyAssistant.configure { |c| c.adapter = MyOpenAIAdapter.new }
 ```
 
+## Writing guide / system prompt
+
+The `system_prompt` config key is the main lever for shaping the assistant's output. It is sent to the LLM on every generation request — use it to encode your publication's voice, structure requirements, and field-filling instructions.
+
+### Recommended approach: a Markdown file in your repo
+
+Keep the guide as a plain Markdown file checked into your repo and read it at boot time:
+
+```ruby
+# config/initializers/lexxy_assistant.rb
+LexxyAssistant.configure do |c|
+  c.system_prompt = Rails.root.join("docs/writing_guide.md").read
+  # ...
+end
+```
+
+Benefits:
+- Editable by non-developers without touching Ruby code
+- Tracked in version control — you can see how the voice guidance evolves
+- The built-in Claude adapter marks it `cache_control: ephemeral`, so Anthropic caches it across requests (no repeated token cost for a long guide)
+
+### What to put in your writing guide
+
+A good writing guide covers:
+
+1. **Role & division of labour** — what the assistant does vs. what the editor decides
+2. **Voice** — sentence rhythm, vocabulary register, things to avoid ("never write 'delve'")
+3. **Structure** — how articles are typically shaped (lede, body sections, closing)
+4. **Output format** — instruct the LLM to produce the markdown table + HTML body that the parser expects (see [LLM output format](#llm-output-format) below)
+5. **Field-filling rules** — how to write `title`, `subtitle`, `excerpt`, `meta_description`, etc.
+
+### Using a callable (dynamic prompts)
+
+If you need the system prompt to vary per request (e.g. include the current date or user context), pass a lambda:
+
+```ruby
+c.system_prompt = -> { "Today is #{Date.today}.\n\n#{Rails.root.join('docs/writing_guide.md').read}" }
+```
+
+The controller calls `.call` on it if it responds to `call`, otherwise uses it as a string directly.
+
+---
+
 ## LLM output format
 
 The assistant parses two things from the LLM response:
